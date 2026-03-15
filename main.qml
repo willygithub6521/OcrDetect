@@ -74,11 +74,11 @@ ApplicationWindow {
             color: transparentColor
             border.width: 1
             border.color: "red"
+            clip: true
             Image {
                 id: clipboardImage
-                width: mainRoot.width *0.8
-                height: mainRoot.height *0.8
-                anchors.centerIn: parent
+                anchors.fill: parent
+                anchors.margins: 2 // 留一點邊距避免圖片直接貼在紅框上
                 smooth: true
                 fillMode: Image.PreserveAspectFit
                 source: System.imageUrl
