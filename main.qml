@@ -50,8 +50,6 @@ ApplicationWindow {
             Layout.preferredWidth: mainRoot.width *0.15
             Layout.preferredHeight: Layout.preferredWidth *2/3
             onClicked: {
-//                console.log("resultArea:")
-//                console.log(resultArea.text)
                 System.saveCsv(resultArea.text)
             }
         }
@@ -98,21 +96,22 @@ ApplicationWindow {
             color: transparentColor
             border.width: 1
             border.color: "red"
-            Flickable {
+            ScrollView {
                 anchors.fill: parent
-                contentWidth: resultArea.paintedWidth
-                contentHeight: resultArea.paintedHeight
+                anchors.margins: 5
                 clip: true
-                TextArea{
+
+                TextArea {
                     id: resultArea
-                    anchors.fill: parent
                     text: ocrResult
                     font.family: fontFamily
                     font.pointSize: contentTitleSize
-    //                wrapMode: TextArea.WrapAnywhere
+                    selectByMouse: true
+                    background: Item {} // Remove default background for a cleaner look within the rectangle
+
+                    // 如果需要自動換行（不出現水平滾動條），可以開啟這行：
+                    // wrapMode: TextArea.Wrap
                 }
-                ScrollBar.vertical: ScrollBar {}
-                ScrollBar.horizontal: ScrollBar {}
             }
         }
     }
