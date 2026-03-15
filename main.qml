@@ -23,94 +23,171 @@ ApplicationWindow {
         }
     }
 
-    ColumnLayout{
+    // Toolbar with buttons at the top
+    RowLayout {
+        id: toolbar
         anchors.top: parent.top
+        anchors.left: parent.left
         anchors.right: parent.right
-        Button{
+        anchors.margins: 10
+        spacing: 15
+        
+        Button {
             id: catchClipboardBt
             text: "Import Image"
-            Layout.preferredWidth: mainRoot.width *0.15
-            Layout.preferredHeight: Layout.preferredWidth *2/3
+            font.family: fontFamily
+            font.pointSize: 12
+            Layout.preferredHeight: 40
+            Layout.fillWidth: true
             onClicked: {
                 System.getImageFromClipboard()
             }
         }
-        Button{
+        Button {
             id: runTesseractBt
             text: "Run OCR"
-            Layout.preferredWidth: mainRoot.width *0.15
-            Layout.preferredHeight: Layout.preferredWidth *2/3
+            font.family: fontFamily
+            font.pointSize: 12
+            Layout.preferredHeight: 40
+            Layout.fillWidth: true
             onClicked: {
                 ocrResult = System.runTesseract()
             }
         }
-        Button{
+        Button {
             id: convertExcel
             text: "Convert Excel"
-            Layout.preferredWidth: mainRoot.width *0.15
-            Layout.preferredHeight: Layout.preferredWidth *2/3
+            font.family: fontFamily
+            font.pointSize: 12
+            Layout.preferredHeight: 40
+            Layout.fillWidth: true
             onClicked: {
                 System.saveCsv(resultArea.text)
             }
         }
     }
 
-
-    ColumnLayout{
-        id: clipboardColumn
-        anchors.top: parent.top
+    // Main content area in a top-bottom structure
+    ColumnLayout {
+        anchors.top: toolbar.bottom
+        anchors.bottom: parent.bottom
         anchors.left: parent.left
-        anchors.leftMargin: 5
-        spacing: 5
-        Text {
-            text: qsTr("Import Image:")
-            font.family: fontFamily
-            font.pointSize: contentTitleSize
-        }
-        Rectangle{
-            id: clipboardRect
-            Layout.preferredWidth: mainRoot.width *0.8
-            Layout.preferredHeight: mainRoot.height *0.4
-            color: transparentColor
-            border.width: 1
-            border.color: "red"
-            clip: true
-            Image {
-                id: clipboardImage
-                anchors.fill: parent
-                anchors.margins: 2 // 留一點邊距避免圖片直接貼在紅框上
-                smooth: true
-                fillMode: Image.PreserveAspectFit
-                source: System.imageUrl
-            }
-        }
-        Text {
-            text: qsTr("Result:")
-            font.family: fontFamily
-            font.pointSize: contentTitleSize
-        }
-        Rectangle{
-            id: resultRect
-            Layout.preferredWidth: mainRoot.width *0.8
-            Layout.preferredHeight: mainRoot.height *0.4
-            color: transparentColor
-            border.width: 1
-            border.color: "red"
-            ScrollView {
-                anchors.fill: parent
-                anchors.margins: 5
-                clip: true
+        anchors.right: parent.right
+        anchors.margins: 10
+        anchors.topMargin: 15
+        spacing: 15
 
-                TextArea {
-                    id: resultArea
-                    text: ocrResult
+        // --- Top Half: Image ---
+        ColumnLayout {
+            Layout.fillHeight: true
+            Layout.preferredHeight: mainRoot.height * 0.5
+            spacing: 5
+            
+            RowLayout {
+                Layout.fillWidth: true
+                Text {
+                    text: qsTr("Import Image:")
                     font.family: fontFamily
                     font.pointSize: contentTitleSize
-                    selectByMouse: true
-                    background: Item {} // Remove default background for a cleaner look within the rectangle
+                    font.bold: true
+                }
+                Item { Layout.fillWidth: true } // spacer
+                Text {
+                    text: qsTr("Zoom:")
+                    font.family: fontFamily
+                    font.pointSize: 12
+                }
+                Slider {
+                    id: zoomSlider
+                    from: 0.1
+                    to: 2.0
+                    value: 0.5
+                    stepSize: 0.1
+                    Layout.preferredWidth: 150
+                }
+                Text {
+                    text: Math.round(zoomSlider.value * 100) + "%"
+                    font.family: fontFamily
+                    font.pointSize: 12
+                    Layout.preferredWidth: 40
+                }
+            }
+            
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                color: "#f9f9f9"
+                border.width: 1
+                border.color: "#cccccc"
+                radius: 4
+                
+                ScrollView {
+                    id: imageScrollView
+                    anchors.fill: parent
+                    anchors.margins: 4
+                    clip: true
+                    
+                    // The ScrollView needs to know the scaled size of its content to show scrollbars
+                    contentWidth: clipboardImage.width
+                    contentHeight: clipboardImage.height
 
-                    // 如果需要自動換行（不出現水平滾動條），可以開啟這行：
-                    // wrapMode: TextArea.Wrap
+                    Image {
+                        id: clipboardImage
+                        // Compute dynamic size based on the actual image dimension * slider value
+                        width: sourceSize.width * zoomSlider.value
+                        height: sourceSize.height * zoomSlider.value
+                        
+                        // We use center inside the content bounds when small, or top-left when large enough to scroll
+                        // But an easier way is to just let it start at 0,0 and expand.
+                        
+                        smooth: true
+                        source: System.imageUrl
+                        
+                        // When filling dynamically, we turn off PreserveAspectFit and strictly use our calculated width/height 
+                        // so it actually physically stretches the dimensions for the scrollview.
+                        fillMode: Image.Stretch
+//                        fillMode: Image.PreserveAspectFit
+                    }
+                }
+            }
+        }
+
+        // --- Bottom Half: Result ---
+        ColumnLayout {
+            Layout.fillHeight: true
+            Layout.preferredHeight: mainRoot.height * 0.35
+            spacing: 5
+            
+            Text {
+                text: qsTr("OCR Result:")
+                font.family: fontFamily
+                font.pointSize: contentTitleSize
+                font.bold: true
+                Layout.alignment: Qt.AlignLeft
+            }
+            
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                color: "white"
+                border.width: 1
+                border.color: "#cccccc"
+                radius: 4
+                
+                ScrollView {
+                    anchors.fill: parent
+                    anchors.margins: 8
+                    clip: true
+
+                    TextArea {
+                        id: resultArea
+                        text: ocrResult
+                        font.family: fontFamily
+                        font.pointSize: contentTitleSize
+                        selectByMouse: true
+                        background: Item {} // Remove default background
+                        // wrapMode: TextArea.Wrap // Enable if you want strict wrapping
+                    }
                 }
             }
         }
