@@ -1,4 +1,5 @@
 #include "system.h"
+#include <QDateTime>
 
 System* qSlotInstance = 0;
 System::System(QObject *parent) :
@@ -51,7 +52,10 @@ void System::getImageFromClipboard()
     const QImage image = clipboard->image();
 
     if (!image.isNull()) {
-        QString path = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/clipimage.png";
+        if (!m_imagePath.isEmpty()) {
+            QFile::remove(m_imagePath);
+        }
+        QString path = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/clipimage_" + QString::number(QDateTime::currentMSecsSinceEpoch()) + ".png";
         
         // 1. 放大圖片 (Upscaling)：Tesseract 針對大於 20px 特徵的字體辨識度最高。表格數字通常較小，放大 2.5 ~ 3 倍能顯著提升對小數點、逗號與負號的精準度
         QImage scaledImage = image.scaled(image.width() * 3, image.height() * 3, Qt::KeepAspectRatio, Qt::SmoothTransformation);
@@ -72,7 +76,17 @@ void System::getImageFromClipboard()
     }
 }
 
-void System::saveCsv(const QString& ocrText, const QUrl& fileUrl)
+void System::clearImage()
+{
+    if (!m_imagePath.isEmpty()) {
+        QFile::remove(m_imagePath);
+        m_imagePath.clear();
+    }
+    m_imageUrl = QUrl("");
+    emit imageChanged();
+}
+
+bool System::saveCsv(const QString& ocrText, const QUrl& fileUrl)
 {
     qDebug() << Q_FUNC_INFO << "ocrText: " << ocrText;
     
@@ -85,7 +99,7 @@ void System::saveCsv(const QString& ocrText, const QUrl& fileUrl)
     QFile file(filePath);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         qWarning() << "Can't open file:" << filePath;
-        return;
+        return false;
     }
 
     QTextStream out(&file);
@@ -120,6 +134,7 @@ void System::saveCsv(const QString& ocrText, const QUrl& fileUrl)
          out << csvLine << "\n";
     }
     file.close();
+    return true;
 }
 
 QUrl System::imageUrl() const {

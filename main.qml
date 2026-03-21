@@ -16,6 +16,7 @@ ApplicationWindow {
     property string fontFamily: "Calibri"
     property color transparentColor: "transparent"
     property string ocrResult: ""
+    property bool clearOcrNextTime: false
 
     FileDialog {
         id: saveDialog
@@ -23,7 +24,9 @@ ApplicationWindow {
         nameFilters: ["CSV files (*.csv)", "All files (*)"]
         selectExisting: false
         onAccepted: {
-            System.saveCsv(resultArea.text, fileUrl)
+            if (System.saveCsv(resultArea.text, fileUrl)) {
+                clearOcrNextTime = true
+            }
         }
     }
 
@@ -62,6 +65,11 @@ ApplicationWindow {
             Layout.preferredHeight: 40
             Layout.fillWidth: true
             onClicked: {
+                if (clearOcrNextTime) {
+                    ocrResult = ""
+//                    resultArea.text = ""
+                    clearOcrNextTime = false
+                }
                 var str = System.runTesseract()
                 ocrResult += str
             }
@@ -161,6 +169,33 @@ ApplicationWindow {
 //                        fillMode: Image.PreserveAspectFit
                     }
                 }
+
+                Button {
+                    text: "X"
+                    width: 30
+                    height: 30
+                    anchors.top: parent.top
+                    anchors.right: parent.right
+                    anchors.margins: 5
+                    visible: System.imageUrl.toString() !== ""
+                    onClicked: {
+                        System.clearImage()
+                    }
+                    contentItem: Text {
+                        text: parent.text
+                        font.family: fontFamily
+                        font.bold: true
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        color: "#555555"
+                    }
+                    background: Rectangle {
+                        color: parent.down ? "#d0d0d0" : (parent.hovered ? "#e0e0e0" : "#f0f0f0")
+                        radius: 15
+                        border.color: "#cccccc"
+                        border.width: 1
+                    }
+                }
             }
         }
 
@@ -199,6 +234,38 @@ ApplicationWindow {
                         selectByMouse: true
                         background: Item {} // Remove default background
                         // wrapMode: TextArea.Wrap // Enable if you want strict wrapping
+                        onEditingFinished: {
+                            ocrResult = text
+                        }
+                    }
+                }
+
+                Button {
+                    text: "X"
+                    width: 30
+                    height: 30
+                    anchors.top: parent.top
+                    anchors.right: parent.right
+                    anchors.margins: 5
+                    visible: resultArea.text !== ""
+                    onClicked: {
+                        ocrResult = ""
+//                        resultArea.text = ""
+                        clearOcrNextTime = false
+                    }
+                    contentItem: Text {
+                        text: parent.text
+                        font.family: fontFamily
+                        font.bold: true
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        color: "#555555"
+                    }
+                    background: Rectangle {
+                        color: parent.down ? "#d0d0d0" : (parent.hovered ? "#e0e0e0" : "#f0f0f0")
+                        radius: 15
+                        border.color: "#cccccc"
+                        border.width: 1
                     }
                 }
             }

@@ -31,7 +31,8 @@ public:
     QImage binarize(const QImage& grayImage, int threshold = 128);
     Q_INVOKABLE QString runTesseract(QString imagePath = "");
     Q_INVOKABLE void getImageFromClipboard();
-    Q_INVOKABLE void saveCsv(const QString& ocrText, const QUrl& fileUrl);
+    Q_INVOKABLE void clearImage();
+    Q_INVOKABLE bool saveCsv(const QString& ocrText, const QUrl& fileUrl);
 
     QUrl imageUrl() const;
 public slots:
