@@ -72,11 +72,16 @@ void System::getImageFromClipboard()
     }
 }
 
-void System::saveCsv(const QString& ocrText)
+void System::saveCsv(const QString& ocrText, const QUrl& fileUrl)
 {
     qDebug() << Q_FUNC_INFO << "ocrText: " << ocrText;
-    qDebug() << "current path: " << QDir::currentPath();
-    QString filePath = QDir::currentPath()+ "/output.csv";
+    
+    QString filePath = fileUrl.toLocalFile();
+    if (filePath.isEmpty()) {
+        filePath = fileUrl.toString(); // Fallback in case it's just a raw path
+    }
+    
+    qDebug() << "target path: " << filePath;
     QFile file(filePath);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         qWarning() << "Can't open file:" << filePath;

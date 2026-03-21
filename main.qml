@@ -2,6 +2,7 @@ import QtQuick 2.14
 import QtQuick.Window 2.14
 import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.12
+import QtQuick.Dialogs 1.3
 import System 1.0
 
 ApplicationWindow {
@@ -15,6 +16,16 @@ ApplicationWindow {
     property string fontFamily: "Calibri"
     property color transparentColor: "transparent"
     property string ocrResult: ""
+
+    FileDialog {
+        id: saveDialog
+        title: "Save CSV File"
+        nameFilters: ["CSV files (*.csv)", "All files (*)"]
+        selectExisting: false
+        onAccepted: {
+            System.saveCsv(resultArea.text, fileUrl)
+        }
+    }
 
     Connections{
         target: System
@@ -51,7 +62,8 @@ ApplicationWindow {
             Layout.preferredHeight: 40
             Layout.fillWidth: true
             onClicked: {
-                ocrResult = System.runTesseract()
+                var str = System.runTesseract()
+                ocrResult += str
             }
         }
         Button {
@@ -62,7 +74,7 @@ ApplicationWindow {
             Layout.preferredHeight: 40
             Layout.fillWidth: true
             onClicked: {
-                System.saveCsv(resultArea.text)
+                saveDialog.open()
             }
         }
     }
